@@ -5,26 +5,37 @@ namespace ActivityHistoryApi.V1.Factories
 {
     public static class EntityFactory
     {
-        public static Entity ToDomain(this DatabaseEntity databaseEntity)
+        public static ActivityHistoryEntity ToDomain(this ActivityHistoryDB databaseEntity)
         {
-            //TODO: Map the rest of the fields in the domain object.
-            // More information on this can be found here https://github.com/LBHackney-IT/lbh-base-api/wiki/Factory-object-mappings
 
-            return new Entity
+            return new ActivityHistoryEntity
             {
                 Id = databaseEntity.Id,
+                AuthorDetails = databaseEntity.AuthorDetails,
+                NewData = databaseEntity.NewData,
+                OldData = databaseEntity.OldData,
+                TargetId = databaseEntity.TargetId,
+                TargetType = databaseEntity.TargetType,
+                TimetoLiveForRecordInDays = databaseEntity.TimetoLiveForRecordInDays,
+                Type = databaseEntity.Type,
                 CreatedAt = databaseEntity.CreatedAt
             };
         }
 
-        public static DatabaseEntity ToDatabase(this Entity entity)
+        public static ActivityHistoryDB ToDatabase(this ActivityHistoryEntity entity)
         {
-            //TODO: Map the rest of the fields in the database object.
 
-            return new DatabaseEntity
+            return new ActivityHistoryDB
             {
                 Id = entity.Id,
-                CreatedAt = entity.CreatedAt
+                CreatedAt = entity.CreatedAt,
+                Type = entity.Type,
+                OldData = entity.OldData,
+                TimetoLiveForRecordInDays = entity.TimetoLiveForRecordInDays,
+                TargetType = entity.TargetType,
+                TargetId = entity.TargetId,
+                NewData = entity.NewData,
+                AuthorDetails = entity.AuthorDetails
             };
         }
     }

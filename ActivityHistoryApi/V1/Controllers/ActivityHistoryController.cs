@@ -24,7 +24,7 @@ namespace ActivityHistoryApi.V1.Controllers
         /// </summary>
         /// <response code="200">...</response>
         /// <response code="404">No ? found for the specified ID</response>
-        [ProducesResponseType(typeof(ResponseObject), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ActivityHistoryResponseObject), StatusCodes.Status200OK)]
         [HttpGet]
         //TODO: rename to match the identifier that will be used
         [Route("{yourId}")]

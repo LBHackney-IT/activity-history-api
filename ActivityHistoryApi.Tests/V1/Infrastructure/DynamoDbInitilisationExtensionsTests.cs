@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using System;
 using System.Linq;
+using Hackney.Core.DynamoDb;
 
 namespace ActivityHistoryApi.Tests.V1.Infrastructure
 {

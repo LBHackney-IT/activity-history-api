@@ -2,7 +2,6 @@ using Amazon.DynamoDBv2.DataModel;
 using ActivityHistoryApi.V1.Domain;
 using ActivityHistoryApi.V1.Factories;
 using ActivityHistoryApi.V1.Infrastructure;
-using System.Collections.Generic;
 
 namespace ActivityHistoryApi.V1.Gateways
 {
@@ -15,9 +14,9 @@ namespace ActivityHistoryApi.V1.Gateways
             _dynamoDbContext = dynamoDbContext;
         }
 
-        public Entity GetEntityById(int id)
+        public ActivityHistoryEntity GetEntityById(int id)
         {
-            var result = _dynamoDbContext.LoadAsync<DatabaseEntity>(id).GetAwaiter().GetResult();
+            var result = _dynamoDbContext.LoadAsync<ActivityHistoryDB>(id).GetAwaiter().GetResult();
             return result?.ToDomain();
         }
     }

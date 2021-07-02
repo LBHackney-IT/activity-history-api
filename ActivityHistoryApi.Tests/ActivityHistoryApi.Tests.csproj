@@ -27,4 +27,8 @@
     <ProjectReference Include="..\ActivityHistoryApi\ActivityHistoryApi.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="V1\Domain\" />
+  </ItemGroup>
+
 </Project>

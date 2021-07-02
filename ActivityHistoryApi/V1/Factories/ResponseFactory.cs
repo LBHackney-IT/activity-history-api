@@ -7,15 +7,26 @@ namespace ActivityHistoryApi.V1.Factories
 {
     public static class ResponseFactory
     {
-        //TODO: Map the fields in the domain object(s) to fields in the response object(s).
-        // More information on this can be found here https://github.com/LBHackney-IT/lbh-base-api/wiki/Factory-object-mappings
-        public static ResponseObject ToResponse(this Entity domain)
+        public static ActivityHistoryResponseObject ToResponse(this ActivityHistoryEntity domain)
         {
-            return new ResponseObject();
+            return new ActivityHistoryResponseObject
+            {
+                Id = domain.Id,
+                TargetId = domain.TargetId,
+                AuthorDetails = domain.AuthorDetails,
+                NewData = domain.NewData,
+                TargetType = domain.TargetType,
+                TimetoLiveForRecordInDays = domain.TimetoLiveForRecordInDays,
+                OldData = domain.OldData,
+                Type = domain.Type,
+                CreatedAt = domain.CreatedAt
+            };
         }
 
-        public static List<ResponseObject> ToResponse(this IEnumerable<Entity> domainList)
+        public static List<ActivityHistoryResponseObject> ToResponse(this IEnumerable<ActivityHistoryEntity> domainList)
         {
+            if (null == domainList) return new List<ActivityHistoryResponseObject>();
+
             return domainList.Select(domain => domain.ToResponse()).ToList();
         }
     }
