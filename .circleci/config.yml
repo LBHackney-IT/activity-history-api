@@ -106,10 +106,10 @@ jobs:
       - setup_remote_docker
       - run:
           name: build
-          command: docker-compose build activity-history-test
+          command: docker-compose build activity-history-api-test
       - run:
           name: Run tests
-          command: docker-compose run activity-history-test
+          command: docker-compose run activity-history-api-test
   assume-role-development:
     executor: docker-python
     steps:
