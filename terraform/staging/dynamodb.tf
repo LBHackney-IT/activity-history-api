@@ -4,6 +4,12 @@ resource "aws_dynamodb_table" "activityhistoryapi_dynamodb_table" {
     read_capacity         = 10
     write_capacity        = 10
     hash_key              = "targetId"
+    range_key             = "id"
+
+    attribute {
+        name              = "id"
+        type              = "S"
+    }
 
     attribute {
         name              = "targetId"

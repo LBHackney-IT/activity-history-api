@@ -1,11 +1,7 @@
 using ActivityHistoryApi.V1.Domain;
 using Amazon.DynamoDBv2.DataModel;
 using Hackney.Core.DynamoDb.Converters;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Type = ActivityHistoryApi.V1.Domain.Type;
 
 namespace ActivityHistoryApi.V1.Infrastructure
@@ -13,9 +9,12 @@ namespace ActivityHistoryApi.V1.Infrastructure
     [DynamoDBTable("ActivityHistory", LowerCamelCaseProperties = true)]
     public class ActivityHistoryDB
     {
+        [DynamoDBRangeKey]
+        public Guid Id { get; set; }
+
         [DynamoDBHashKey]
         public Guid TargetId { get; set; }
-        public Guid Id { get; set; }
+
 
         [DynamoDBProperty(Converter = typeof(DynamoDbEnumConverter<Type>))]
         public Type Type { get; set; }

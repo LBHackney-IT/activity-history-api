@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using Hackney.Core.DynamoDb;
+using System.Linq;
 
 namespace ActivityHistoryApi.Tests
 {
@@ -46,10 +47,26 @@ namespace ActivityHistoryApi.Tests
             {
                 try
                 {
+                    var keySchema = new List<KeySchemaElement> { new KeySchemaElement(table.KeyName, KeyType.HASH) };
+                    var attributes = new List<AttributeDefinition> { new AttributeDefinition(table.KeyName, table.KeyType) };
+                    if (!string.IsNullOrEmpty(table.RangeKeyName))
+                    {
+                        keySchema.Add(new KeySchemaElement(table.RangeKeyName, KeyType.RANGE));
+                        attributes.Add(new AttributeDefinition(table.RangeKeyName, table.RangeKeyType));
+                    }
+
+                    var indexRangeKey = table.LocalSecondaryIndexes.SelectMany(x => x.KeySchema).FirstOrDefault(y => y.KeyType == KeyType.RANGE);
+                    if (null != indexRangeKey)
+                        attributes.Add(new AttributeDefinition(indexRangeKey.AttributeName, ScalarAttributeType.S)); // Assume a string for now.
+
                     var request = new CreateTableRequest(table.Name,
-                        new List<KeySchemaElement> { new KeySchemaElement(table.KeyName, KeyType.HASH) },
-                        new List<AttributeDefinition> { new AttributeDefinition(table.KeyName, table.KeyType) },
-                        new ProvisionedThroughput(3, 3));
+                        keySchema,
+                        attributes,
+                        new ProvisionedThroughput(3, 3))
+                    {
+                        LocalSecondaryIndexes = table.LocalSecondaryIndexes
+                    };
+
                     _ = dynamoDb.CreateTableAsync(request).GetAwaiter().GetResult();
                 }
                 catch (ResourceInUseException)

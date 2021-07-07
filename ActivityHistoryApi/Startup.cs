@@ -23,6 +23,16 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Hackney.Core.DynamoDb.HealthCheck;
 using Hackney.Core.DynamoDb;
+using System.Text.Json.Serialization;
+using Hackney.Core.Logging;
+using Amazon.XRay.Recorder.Core;
+using Amazon;
+using Hackney.Core.Middleware.CorrelationId;
+using Hackney.Core.Middleware.Logging;
+using Hackney.Core.Middleware.Exception;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Hackney.Core.HealthCheck;
+using FluentValidation.AspNetCore;
 
 namespace ActivityHistoryApi
 {
@@ -47,6 +57,11 @@ namespace ActivityHistoryApi
 
             services
                 .AddMvc()
+                .AddFluentValidation(fv => fv.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly()))
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                })
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
             services.AddApiVersioning(o =>
             {
@@ -116,49 +131,34 @@ namespace ActivityHistoryApi
                     c.IncludeXmlComments(xmlPath);
             });
 
-            ConfigureLogging(services, Configuration);
+            services.ConfigureLambdaLogging(Configuration);
+            AWSXRayRecorder.InitializeInstance(Configuration);
+            AWSXRayRecorder.RegisterLogger(LoggingOptions.SystemDiagnostics);
 
+            services.AddLogCallAspect();
             services.ConfigureDynamoDB();
-
             RegisterGateways(services);
             RegisterUseCases(services);
-        }
-
-        private static void ConfigureLogging(IServiceCollection services, IConfiguration configuration)
-        {
-            // We rebuild the logging stack so as to ensure the console logger is not used in production.
-            // See here: https://weblog.west-wind.com/posts/2018/Dec/31/Dont-let-ASPNET-Core-Default-Console-Logging-Slow-your-App-down
-            services.AddLogging(config =>
-            {
-                // clear out default configuration
-                config.ClearProviders();
-
-                config.AddConfiguration(configuration.GetSection("Logging"));
-                config.AddDebug();
-                config.AddEventSourceLogger();
-
-                if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == Environments.Development)
-                {
-                    config.AddConsole();
-                }
-            });
         }
 
         private static void RegisterGateways(IServiceCollection services)
         {
 
-            services.AddScoped<IExampleGateway, DynamoDbGateway>();
+            services.AddScoped<IActivityHistoryGateway, ActivityHistoryDbGateway>();
         }
 
         private static void RegisterUseCases(IServiceCollection services)
         {
-            services.AddScoped<IGetByIdUseCase, GetByIdUseCase>();
+            services.AddScoped<IGetByTargetIdUseCase, GetByTargetIdUseCase>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public static void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public static void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
-            app.UseCorrelation();
+            app.UseCors(builder => builder
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod());
 
             if (env.IsDevelopment())
             {
@@ -169,7 +169,9 @@ namespace ActivityHistoryApi
                 app.UseHsts();
             }
 
-
+            app.UseCorrelationId();
+            app.UseLoggingScope();
+            app.UseCustomExceptionHandler(logger);
             app.UseXRay("activity-history-api");
 
 
@@ -193,7 +195,14 @@ namespace ActivityHistoryApi
             {
                 // SwaggerGen won't find controllers that are routed via this technique.
                 endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+
+                endpoints.MapHealthChecks("/api/v1/healthcheck/ping", new HealthCheckOptions()
+                {
+                    ResponseWriter = HealthCheckResponseWriter.WriteResponse
+                });
             });
+            app.UseLogCall();
+
         }
     }
 }
