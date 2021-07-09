@@ -22,7 +22,7 @@ namespace ActivityHistoryApi.Tests.V1.E2ETests.Fixtures
 
         public string InvalidTargetId { get; private set; }
 
-        public const int MAXNOTES = 10;
+        public const int MAXRESULTS = 10;
 
         public ActivityHistoryResponseObject ActivityHistoryResponse { get; set; }
 
@@ -52,7 +52,7 @@ namespace ActivityHistoryApi.Tests.V1.E2ETests.Fixtures
 
         public void GivenActivityHistoryAlreadyExist()
         {
-            GivenActivityHistoryAlreadyExist(MAXNOTES);
+            GivenActivityHistoryAlreadyExist(MAXRESULTS);
         }
 
         public void GivenActivityHistoryAlreadyExist(int count)

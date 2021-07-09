@@ -16,7 +16,7 @@ namespace ActivityHistoryApi.V1.Factories
                 OldData = databaseEntity.OldData,
                 TargetId = databaseEntity.TargetId,
                 TargetType = databaseEntity.TargetType,
-                TimetoLiveForRecordInDays = databaseEntity.TimetoLiveForRecordInDays,
+                TimetoLiveForRecord = databaseEntity.TimetoLiveForRecord,
                 Type = databaseEntity.Type,
                 CreatedAt = databaseEntity.CreatedAt
             };
@@ -31,7 +31,7 @@ namespace ActivityHistoryApi.V1.Factories
                 CreatedAt = entity.CreatedAt,
                 Type = entity.Type,
                 OldData = entity.OldData,
-                TimetoLiveForRecordInDays = entity.TimetoLiveForRecordInDays,
+                TimetoLiveForRecord = entity.TimetoLiveForRecord,
                 TargetType = entity.TargetType,
                 TargetId = entity.TargetId,
                 NewData = entity.NewData,

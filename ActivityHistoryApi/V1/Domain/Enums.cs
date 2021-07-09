@@ -15,24 +15,10 @@ namespace ActivityHistoryApi.V1.Domain
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum Type
+    public enum ActivityType
     {
         create,
         update,
         delete
-    }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum Title
-    {
-        Dr,
-        Master,
-        Miss,
-        Mr,
-        Mrs,
-        Ms,
-        Other,
-        Rabbi,
-        Reverend
     }
 }

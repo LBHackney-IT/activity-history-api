@@ -11,7 +11,7 @@ namespace ActivityHistoryApi.Tests.V1.E2ETests.Stories
 {
     [Story(
         AsA = "Internal Hackney user (such as a Housing Officer or Area housing Manager)",
-        IWant = "to view any changes made to person details",
+        IWant = "to view any changes made by any target entity",
         SoThat = "I have a log of when changes were made and by whom")]
     [Collection("DynamoDb collection")]
     public class GetActivityHistoryByTargetIdTests : IDisposable

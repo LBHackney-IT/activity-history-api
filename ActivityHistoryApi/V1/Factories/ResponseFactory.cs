@@ -16,7 +16,7 @@ namespace ActivityHistoryApi.V1.Factories
                 AuthorDetails = domain.AuthorDetails,
                 NewData = domain.NewData,
                 TargetType = domain.TargetType,
-                TimetoLiveForRecordInDays = domain.TimetoLiveForRecordInDays,
+                TimetoLiveForRecord = domain.TimetoLiveForRecord,
                 OldData = domain.OldData,
                 Type = domain.Type,
                 CreatedAt = domain.CreatedAt

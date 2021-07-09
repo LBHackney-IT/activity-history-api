@@ -80,7 +80,7 @@ namespace ActivityHistoryApi.Tests.V1.Gateways
             response.PaginationDetails.HasNext.Should().BeFalse();
             response.PaginationDetails.NextToken.Should().BeNull();
 
-            _logger.VerifyExact(LogLevel.Debug, $"Querying ActivityHistory index for targetId {query.TargetId}", Times.Once());
+            _logger.VerifyExact(LogLevel.Debug, $"Querying ActivityHistoryByCreatedAt index for targetId {query.TargetId}", Times.Once());
         }
 
         [Fact]
@@ -96,7 +96,7 @@ namespace ActivityHistoryApi.Tests.V1.Gateways
             response.PaginationDetails.HasNext.Should().BeFalse();
             response.PaginationDetails.NextToken.Should().BeNull();
 
-            _logger.VerifyExact(LogLevel.Debug, $"Querying ActivityHistory index for targetId {query.TargetId}", Times.Once());
+            _logger.VerifyExact(LogLevel.Debug, $"Querying ActivityHistoryByCreatedAt index for targetId {query.TargetId}", Times.Once());
         }
 
         [Fact]
@@ -121,7 +121,7 @@ namespace ActivityHistoryApi.Tests.V1.Gateways
             response.PaginationDetails.HasNext.Should().BeFalse();
             response.PaginationDetails.NextToken.Should().BeNull();
 
-            _logger.VerifyExact(LogLevel.Debug, $"Querying ActivityHistory index for targetId {query.TargetId}", Times.Exactly(2));
+            _logger.VerifyExact(LogLevel.Debug, $"Querying ActivityHistoryByCreatedAt index for targetId {query.TargetId}", Times.Exactly(2));
         }
 
         [Fact]
@@ -137,7 +137,7 @@ namespace ActivityHistoryApi.Tests.V1.Gateways
             response.PaginationDetails.HasNext.Should().BeFalse();
             response.PaginationDetails.NextToken.Should().BeNull();
 
-            _logger.VerifyExact(LogLevel.Debug, $"Querying ActivityHistory index for targetId {query.TargetId}", Times.Once());
+            _logger.VerifyExact(LogLevel.Debug, $"Querying ActivityHistoryByCreatedAt index for targetId {query.TargetId}", Times.Once());
         }
     }
 

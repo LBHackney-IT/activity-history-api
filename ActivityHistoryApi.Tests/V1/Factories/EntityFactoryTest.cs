@@ -21,11 +21,11 @@ namespace ActivityHistoryApi.Tests.V1.Factories
             databaseEntity.Id.Should().Be(entity.Id);
             databaseEntity.CreatedAt.Should().BeSameDateAs(entity.CreatedAt);
             databaseEntity.AuthorDetails.Should().Be(entity.AuthorDetails);
-            databaseEntity.NewData.Should().Be(entity.NewData);
-            databaseEntity.OldData.Should().Be(entity.OldData);
+            databaseEntity.NewData.Should().BeEquivalentTo(entity.NewData);
+            databaseEntity.OldData.Should().BeEquivalentTo(entity.OldData);
             databaseEntity.TargetId.Should().Be(entity.TargetId);
             databaseEntity.TargetType.Should().Be(entity.TargetType);
-            databaseEntity.TimetoLiveForRecordInDays.Should().Be(entity.TimetoLiveForRecordInDays);
+            databaseEntity.TimetoLiveForRecord.Should().Be(entity.TimetoLiveForRecord);
             databaseEntity.Type.Should().Be(entity.Type);
 
         }
@@ -39,11 +39,11 @@ namespace ActivityHistoryApi.Tests.V1.Factories
             entity.Id.Should().Be(databaseEntity.Id);
             entity.CreatedAt.Should().BeSameDateAs(databaseEntity.CreatedAt);
             entity.AuthorDetails.Should().Be(databaseEntity.AuthorDetails);
-            entity.NewData.Should().Be(databaseEntity.NewData);
-            entity.OldData.Should().Be(databaseEntity.OldData);
+            entity.NewData.Should().BeEquivalentTo(databaseEntity.NewData);
+            entity.OldData.Should().BeEquivalentTo(databaseEntity.OldData);
             entity.TargetId.Should().Be(databaseEntity.TargetId);
             entity.TargetType.Should().Be(databaseEntity.TargetType);
-            entity.TimetoLiveForRecordInDays.Should().Be(databaseEntity.TimetoLiveForRecordInDays);
+            entity.TimetoLiveForRecord.Should().Be(databaseEntity.TimetoLiveForRecord);
             entity.Type.Should().Be(databaseEntity.Type);
 
         }

@@ -16,7 +16,7 @@ namespace ActivityHistoryApi.V1.Gateways
     public class ActivityHistoryDbGateway : IActivityHistoryGateway
     {
         private const int MAX_RESULTS = 10;
-        private const string GETACTIVITIESBYTARGETIDINDEX = "ActivityHistory";
+        private const string GETACTIVITIESBYTARGETIDINDEX = "ActivityHistoryByCreatedAt";
         private const string TARGETID = "targetId";
 
         private readonly IDynamoDBContext _dynamoDbContext;

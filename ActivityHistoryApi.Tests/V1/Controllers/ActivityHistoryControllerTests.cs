@@ -72,7 +72,7 @@ namespace ActivityHistoryApi.Tests.V1.Controllers
         [InlineData(null)]
         [InlineData("")]
         [InlineData("some-value")]
-        public void GetPersonByIdAsyncExceptionIsThrown(string paginationToken)
+        public void GetActivityHistoryByTargetIdAsyncExceptionIsThrown(string paginationToken)
         {
             // Arrange
             var id = Guid.NewGuid();

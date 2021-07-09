@@ -27,7 +27,7 @@ namespace ActivityHistoryApi.Tests
                 {
                     new LocalSecondaryIndex
                     {
-                        IndexName = "ActivityHistory",
+                        IndexName = "ActivityHistoryByCreatedAt",
                         KeySchema = new List<KeySchemaElement>(new[]
                         {
                             new KeySchemaElement("targetId", KeyType.HASH),

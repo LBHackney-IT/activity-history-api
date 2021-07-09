@@ -2,7 +2,7 @@ using ActivityHistoryApi.V1.Domain;
 using Amazon.DynamoDBv2.DataModel;
 using Hackney.Core.DynamoDb.Converters;
 using System;
-using Type = ActivityHistoryApi.V1.Domain.Type;
+using System.Collections.Generic;
 
 namespace ActivityHistoryApi.V1.Infrastructure
 {
@@ -16,8 +16,8 @@ namespace ActivityHistoryApi.V1.Infrastructure
         public Guid TargetId { get; set; }
 
 
-        [DynamoDBProperty(Converter = typeof(DynamoDbEnumConverter<Type>))]
-        public Type Type { get; set; }
+        [DynamoDBProperty(Converter = typeof(DynamoDbEnumConverter<ActivityType>))]
+        public ActivityType Type { get; set; }
 
         [DynamoDBProperty(Converter = typeof(DynamoDbEnumConverter<TargetType>))]
         public TargetType TargetType { get; set; }
@@ -25,13 +25,13 @@ namespace ActivityHistoryApi.V1.Infrastructure
         [DynamoDBProperty(Converter = typeof(DynamoDbDateTimeConverter))]
         public DateTime CreatedAt { get; set; }
 
-        public int TimetoLiveForRecordInDays { get; set; }
+        public int TimetoLiveForRecord { get; set; }
 
-        [DynamoDBProperty(Converter = typeof(DynamoDbObjectConverter<OldData>))]
-        public OldData OldData { get; set; }
+        [DynamoDBProperty(Converter = typeof(DynamoDbObjectConverter<Dictionary<string, object>>))]
+        public Dictionary<string, object> OldData { get; set; }
 
-        [DynamoDBProperty(Converter = typeof(DynamoDbObjectConverter<NewData>))]
-        public NewData NewData { get; set; }
+        [DynamoDBProperty(Converter = typeof(DynamoDbObjectConverter<Dictionary<string, object>>))]
+        public Dictionary<string, object> NewData { get; set; }
 
         [DynamoDBProperty(Converter = typeof(DynamoDbObjectConverter<AuthorDetails>))]
         public AuthorDetails AuthorDetails { get; set; }

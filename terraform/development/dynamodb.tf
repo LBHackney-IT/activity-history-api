@@ -16,6 +16,17 @@ resource "aws_dynamodb_table" "activityhistoryapi_dynamodb_table" {
         type              = "S"
     }
 
+    attribute {
+        name              = "createdAt"
+        type              = "S"
+    }
+
+    local_secondary_index {
+        name              = "ActivityHistoryByCreatedAt"
+        range_key         = "createdAt"
+        projection_type   = "ALL"
+    }
+
     tags = {
         Name              = "activity-history-api-${var.environment_name}"
         Environment       = var.environment_name
