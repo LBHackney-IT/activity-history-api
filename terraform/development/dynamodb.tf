@@ -21,6 +21,11 @@ resource "aws_dynamodb_table" "activityhistoryapi_dynamodb_table" {
         type              = "S"
     }
 
+    ttl {
+        attribute_name    = "TimetoLiveForRecord"
+        enabled           = true 
+    }
+
     local_secondary_index {
         name              = "ActivityHistoryByCreatedAt"
         range_key         = "createdAt"
