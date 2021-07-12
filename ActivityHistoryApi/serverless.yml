@@ -19,7 +19,7 @@ functions:
     name: ${self:service}-${self:provider.stage}
     handler: ActivityHistoryApi::ActivityHistoryApi.LambdaEntryPoint::FunctionHandlerAsync
     role: lambdaExecutionRole
-     events:
+    events:
       - http:
           path: /{proxy+}
           method: ANY
