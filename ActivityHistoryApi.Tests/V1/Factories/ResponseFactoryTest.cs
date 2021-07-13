@@ -19,6 +19,7 @@ namespace ActivityHistoryApi.Tests.V1.Factories
             response.OldData.Should().BeEquivalentTo(domain.OldData);
             response.TimetoLiveForRecord.Should().Be(domain.TimetoLiveForRecord);
             response.Type.Should().Be(domain.Type);
+            response.SourceDomain.Should().Be(domain.SourceDomain);
         }
     }
 }

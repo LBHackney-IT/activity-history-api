@@ -36,5 +36,8 @@ namespace ActivityHistoryApi.V1.Infrastructure
         [DynamoDBProperty(Converter = typeof(DynamoDbObjectConverter<AuthorDetails>))]
         public AuthorDetails AuthorDetails { get; set; }
 
+        [DynamoDBProperty]
+        public string SourceDomain { get; set; }
+
     }
 }
