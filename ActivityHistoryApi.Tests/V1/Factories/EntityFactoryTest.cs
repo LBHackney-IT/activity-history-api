@@ -27,6 +27,7 @@ namespace ActivityHistoryApi.Tests.V1.Factories
             databaseEntity.TargetType.Should().Be(entity.TargetType);
             databaseEntity.TimetoLiveForRecord.Should().Be(entity.TimetoLiveForRecord);
             databaseEntity.Type.Should().Be(entity.Type);
+            databaseEntity.SourceDomain.Should().Be(entity.SourceDomain);
 
         }
 
@@ -45,6 +46,7 @@ namespace ActivityHistoryApi.Tests.V1.Factories
             entity.TargetType.Should().Be(databaseEntity.TargetType);
             entity.TimetoLiveForRecord.Should().Be(databaseEntity.TimetoLiveForRecord);
             entity.Type.Should().Be(databaseEntity.Type);
+            entity.SourceDomain.Should().Be(databaseEntity.SourceDomain);
 
         }
     }

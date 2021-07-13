@@ -15,6 +15,7 @@ namespace ActivityHistoryApi.V1.Boundary.Response
         public Dictionary<string, object> OldData { get; set; }
         public Dictionary<string, object> NewData { get; set; }
         public AuthorDetails AuthorDetails { get; set; }
+        public string SourceDomain { get; set; }
 
 
     }

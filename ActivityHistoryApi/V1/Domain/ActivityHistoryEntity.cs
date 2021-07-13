@@ -21,5 +21,7 @@ namespace ActivityHistoryApi.V1.Domain
 
         public AuthorDetails AuthorDetails { get; set; }
 
+        public string SourceDomain { get; set; }
+
     }
 }

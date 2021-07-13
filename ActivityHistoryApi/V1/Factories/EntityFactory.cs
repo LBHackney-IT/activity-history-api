@@ -18,7 +18,8 @@ namespace ActivityHistoryApi.V1.Factories
                 TargetType = databaseEntity.TargetType,
                 TimetoLiveForRecord = databaseEntity.TimetoLiveForRecord,
                 Type = databaseEntity.Type,
-                CreatedAt = databaseEntity.CreatedAt
+                CreatedAt = databaseEntity.CreatedAt,
+                SourceDomain = databaseEntity.SourceDomain
             };
         }
 
@@ -35,7 +36,8 @@ namespace ActivityHistoryApi.V1.Factories
                 TargetType = entity.TargetType,
                 TargetId = entity.TargetId,
                 NewData = entity.NewData,
-                AuthorDetails = entity.AuthorDetails
+                AuthorDetails = entity.AuthorDetails,
+                SourceDomain = entity.SourceDomain
             };
         }
     }
