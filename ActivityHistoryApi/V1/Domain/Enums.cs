@@ -11,8 +11,7 @@ namespace ActivityHistoryApi.V1.Domain
     {
         person,
         asset,
-        tenure,
-        migrate
+        tenure
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -20,6 +19,7 @@ namespace ActivityHistoryApi.V1.Domain
     {
         create,
         update,
-        delete
+        delete,
+        migrate
     }
 }
