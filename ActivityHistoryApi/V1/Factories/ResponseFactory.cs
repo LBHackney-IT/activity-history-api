@@ -19,7 +19,8 @@ namespace ActivityHistoryApi.V1.Factories
                 TimetoLiveForRecord = domain.TimetoLiveForRecord,
                 OldData = domain.OldData,
                 Type = domain.Type,
-                CreatedAt = domain.CreatedAt
+                CreatedAt = domain.CreatedAt,
+                SourceDomain = domain.SourceDomain
             };
         }
 
