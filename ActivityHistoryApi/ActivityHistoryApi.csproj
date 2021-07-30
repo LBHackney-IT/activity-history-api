@@ -32,8 +32,4 @@
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.4.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="terraform\" />
-  </ItemGroup>
-
 </Project>
