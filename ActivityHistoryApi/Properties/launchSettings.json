@@ -9,13 +9,13 @@
     }
   },
   "profiles": {
-    "base_api": {
+    "activity_history_api": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "api/v1/healthcheck/ping",
       "applicationUrl": "http://localhost:5000",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "DevelopmentLocal",
         "DynamoDb_LocalMode": "true",
         "DynamoDb_LocalServiceUrl": "http://localhost:8000"
       }

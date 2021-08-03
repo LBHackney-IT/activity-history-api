@@ -33,6 +33,7 @@ using Hackney.Core.Middleware.Exception;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Hackney.Core.HealthCheck;
 using FluentValidation.AspNetCore;
+using Hackney.Core.DI;
 
 namespace ActivityHistoryApi
 {
@@ -136,6 +137,7 @@ namespace ActivityHistoryApi
             AWSXRayRecorder.RegisterLogger(LoggingOptions.SystemDiagnostics);
 
             services.AddLogCallAspect();
+            services.AddTokenFactory();
             services.ConfigureDynamoDB();
             RegisterGateways(services);
             RegisterUseCases(services);
