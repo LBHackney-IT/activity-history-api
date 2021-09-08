@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace ActivityHistoryApi.V1.Domain
 {
@@ -12,7 +8,8 @@ namespace ActivityHistoryApi.V1.Domain
         person,
         asset,
         tenure,
-        contactDetails
+        contactDetails,
+        tenurePerson
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
