@@ -1,10 +1,10 @@
-using ActivityHistoryApi.V1.Boundary.Request;
-using ActivityHistoryApi.V1.Boundary.Response;
 using ActivityHistoryApi.V1.Controllers;
 using ActivityHistoryApi.V1.UseCase.Interfaces;
 using AutoFixture;
 using FluentAssertions;
 using Hackney.Core.DynamoDb;
+using Hackney.Shared.ActivityHistory.Boundary.Request;
+using Hackney.Shared.ActivityHistory.Boundary.Response;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using System;

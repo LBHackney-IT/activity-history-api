@@ -7,11 +7,11 @@ using System;
 using AutoFixture;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using ActivityHistoryApi.V1.Infrastructure;
-using ActivityHistoryApi.V1.Domain;
 using System.Threading.Tasks;
-using ActivityHistoryApi.V1.Boundary.Request;
 using System.Linq;
+using Hackney.Shared.ActivityHistory.Domain;
+using Hackney.Shared.ActivityHistory.Infrastructure;
+using Hackney.Shared.ActivityHistory.Boundary.Request;
 
 namespace ActivityHistoryApi.Tests.V1.Gateways
 {

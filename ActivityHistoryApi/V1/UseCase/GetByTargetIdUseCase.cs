@@ -1,10 +1,10 @@
-using ActivityHistoryApi.V1.Boundary.Request;
-using ActivityHistoryApi.V1.Boundary.Response;
-using ActivityHistoryApi.V1.Factories;
 using ActivityHistoryApi.V1.Gateways;
 using ActivityHistoryApi.V1.UseCase.Interfaces;
 using Hackney.Core.DynamoDb;
 using Hackney.Core.Logging;
+using Hackney.Shared.ActivityHistory.Boundary.Request;
+using Hackney.Shared.ActivityHistory.Boundary.Response;
+using Hackney.Shared.ActivityHistory.Factories;
 using System.Threading.Tasks;
 
 namespace ActivityHistoryApi.V1.UseCase
