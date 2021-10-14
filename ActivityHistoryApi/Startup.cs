@@ -1,5 +1,4 @@
 using ActivityHistoryApi.V1.Gateways;
-using ActivityHistoryApi.V1.Infrastructure;
 using ActivityHistoryApi.V1.UseCase;
 using ActivityHistoryApi.V1.UseCase.Interfaces;
 using ActivityHistoryApi.Versioning;
@@ -15,6 +14,7 @@ using Hackney.Core.Logging;
 using Hackney.Core.Middleware.CorrelationId;
 using Hackney.Core.Middleware.Exception;
 using Hackney.Core.Middleware.Logging;
+using Hackney.Shared.ActivityHistory.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -132,12 +132,14 @@ namespace ActivityHistoryApi
             });
 
             services.ConfigureLambdaLogging(Configuration);
+
             AWSXRayRecorder.InitializeInstance(Configuration);
             AWSXRayRecorder.RegisterLogger(LoggingOptions.SystemDiagnostics);
 
             services.AddLogCallAspect();
             services.AddTokenFactory();
             services.ConfigureDynamoDB();
+
             RegisterGateways(services);
             RegisterUseCases(services);
         }
