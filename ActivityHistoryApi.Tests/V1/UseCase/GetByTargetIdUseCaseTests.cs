@@ -1,12 +1,12 @@
-using ActivityHistoryApi.V1.Boundary.Request;
-using ActivityHistoryApi.V1.Boundary.Response;
-using ActivityHistoryApi.V1.Domain;
-using ActivityHistoryApi.V1.Factories;
 using ActivityHistoryApi.V1.Gateways;
 using ActivityHistoryApi.V1.UseCase;
 using AutoFixture;
 using FluentAssertions;
 using Hackney.Core.DynamoDb;
+using Hackney.Shared.ActivityHistory.Boundary.Request;
+using Hackney.Shared.ActivityHistory.Boundary.Response;
+using Hackney.Shared.ActivityHistory.Domain;
+using Hackney.Shared.ActivityHistory.Factories;
 using Moq;
 using System;
 using System.Collections.Generic;
