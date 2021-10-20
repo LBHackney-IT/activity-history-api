@@ -1,7 +1,7 @@
+using ActivityHistoryApi.V1.Boundary.Request;
+using ActivityHistoryApi.V1.Boundary.Response;
 using ActivityHistoryApi.V1.UseCase.Interfaces;
 using Hackney.Core.Logging;
-using Hackney.Shared.ActivityHistory.Boundary.Request;
-using Hackney.Shared.ActivityHistory.Boundary.Response;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

@@ -1,15 +1,15 @@
 using Amazon.DynamoDBv2.DataModel;
+using ActivityHistoryApi.V1.Domain;
+using ActivityHistoryApi.V1.Factories;
+using ActivityHistoryApi.V1.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Hackney.Core.Logging;
 using System.Threading.Tasks;
 using Hackney.Core.DynamoDb;
+using ActivityHistoryApi.V1.Boundary.Request;
 using System.Collections.Generic;
 using Amazon.DynamoDBv2.DocumentModel;
 using System.Linq;
-using Hackney.Shared.ActivityHistory.Domain;
-using Hackney.Shared.ActivityHistory.Infrastructure;
-using Hackney.Shared.ActivityHistory.Boundary.Request;
-using Hackney.Shared.ActivityHistory.Factories;
 
 namespace ActivityHistoryApi.V1.Gateways
 {

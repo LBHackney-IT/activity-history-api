@@ -50,3 +50,4 @@ module "activity_history_api_cloudwatch_dashboard" {
   dynamodb_table_name = aws_dynamodb_table.activityhistoryapi_dynamodb_table.name
   include_sns_widget  = false
 }
+
