@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ActivityHistoryApi.V1.Controllers;
+using ActivityHistoryApi.V1.Infrastructure;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

@@ -1,7 +1,7 @@
+using ActivityHistoryApi.V1.Boundary.Response;
+using ActivityHistoryApi.V1.Infrastructure;
 using FluentAssertions;
 using Hackney.Core.DynamoDb;
-using Hackney.Shared.ActivityHistory.Boundary.Response;
-using Hackney.Shared.ActivityHistory.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;

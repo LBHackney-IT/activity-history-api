@@ -1,8 +1,8 @@
+using ActivityHistoryApi.V1.Boundary.Response;
+using ActivityHistoryApi.V1.Domain;
+using ActivityHistoryApi.V1.Infrastructure;
 using Amazon.DynamoDBv2.DataModel;
 using AutoFixture;
-using Hackney.Shared.ActivityHistory.Boundary.Response;
-using Hackney.Shared.ActivityHistory.Domain;
-using Hackney.Shared.ActivityHistory.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
