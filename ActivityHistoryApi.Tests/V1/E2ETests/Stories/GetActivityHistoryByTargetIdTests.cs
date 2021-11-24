@@ -1,9 +1,7 @@
 using ActivityHistoryApi.Tests.V1.E2ETests.Fixtures;
 using ActivityHistoryApi.Tests.V1.E2ETests.Steps;
+using Hackney.Core.Testing.DynamoDb;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using TestStack.BDDfy;
 using Xunit;
 
@@ -13,18 +11,18 @@ namespace ActivityHistoryApi.Tests.V1.E2ETests.Stories
         AsA = "Internal Hackney user (such as a Housing Officer or Area housing Manager)",
         IWant = "to view any changes made by any target entity",
         SoThat = "I have a log of when changes were made and by whom")]
-    [Collection("DynamoDb collection")]
+    [Collection("AppTest collection")]
     public class GetActivityHistoryByTargetIdTests : IDisposable
     {
-        private readonly DynamoDbIntegrationTests<Startup> _dbFixture;
+        private readonly IDynamoDbFixture _dbFixture;
         private readonly ActivityHistoryFixture _activityHistoryFixture;
         private readonly GetActivityHistorySteps _steps;
 
-        public GetActivityHistoryByTargetIdTests(DynamoDbIntegrationTests<Startup> dbFixture)
+        public GetActivityHistoryByTargetIdTests(MockWebApplicationFactory<Startup> appFactory)
         {
-            _dbFixture = dbFixture;
+            _dbFixture = appFactory.DynamoDbFixture;
             _activityHistoryFixture = new ActivityHistoryFixture(_dbFixture.DynamoDbContext);
-            _steps = new GetActivityHistorySteps(_dbFixture.Client);
+            _steps = new GetActivityHistorySteps(appFactory.Client);
         }
 
         public void Dispose()
