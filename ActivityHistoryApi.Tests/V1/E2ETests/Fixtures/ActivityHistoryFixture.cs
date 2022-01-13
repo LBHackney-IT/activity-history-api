@@ -6,7 +6,6 @@ using Hackney.Shared.ActivityHistory.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace ActivityHistoryApi.Tests.V1.E2ETests.Fixtures
 {

@@ -1,34 +1,34 @@
-using Amazon.DynamoDBv2.DataModel;
 using ActivityHistoryApi.V1.Gateways;
-using FluentAssertions;
-using Moq;
-using Xunit;
-using System;
 using AutoFixture;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
+using FluentAssertions;
+using Hackney.Core.Testing.DynamoDb;
+using Hackney.Core.Testing.Shared;
+using Hackney.Shared.ActivityHistory.Boundary.Request;
 using Hackney.Shared.ActivityHistory.Domain;
 using Hackney.Shared.ActivityHistory.Infrastructure;
-using Hackney.Shared.ActivityHistory.Boundary.Request;
+using Microsoft.Extensions.Logging;
+using Moq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace ActivityHistoryApi.Tests.V1.Gateways
 {
-    [Collection("DynamoDb collection")]
+    [Collection("AppTest collection")]
     public class ActivityHistoryGatewayTests : IDisposable
     {
         private readonly Fixture _fixture = new Fixture();
         private readonly Mock<ILogger<ActivityHistoryDbGateway>> _logger;
-        private readonly IDynamoDBContext _dynamoDb;
+        private readonly IDynamoDbFixture _dbFixture;
         private readonly ActivityHistoryDbGateway _classUnderTest;
-        private readonly List<Action> _cleanup = new List<Action>();
 
-        public ActivityHistoryGatewayTests(DynamoDbIntegrationTests<Startup> dbTestFixture)
+        public ActivityHistoryGatewayTests(MockWebApplicationFactory<Startup> appFactory)
         {
             _logger = new Mock<ILogger<ActivityHistoryDbGateway>>();
-            _dynamoDb = dbTestFixture.DynamoDbContext;
-            _classUnderTest = new ActivityHistoryDbGateway(_dynamoDb, _logger.Object);
+            _dbFixture = appFactory.DynamoDbFixture;
+            _classUnderTest = new ActivityHistoryDbGateway(_dbFixture.DynamoDbContext, _logger.Object);
         }
 
         public void Dispose()
@@ -42,14 +42,16 @@ namespace ActivityHistoryApi.Tests.V1.Gateways
         {
             if (disposing && !_disposed)
             {
-                foreach (var action in _cleanup)
-                    action();
-
                 _disposed = true;
             }
         }
 
-        private List<ActivityHistoryDB> InsertActivityHistory(Guid targetId, int count)
+        private async Task InsertDataIntoDynamoDB(ActivityHistoryDB entity)
+        {
+            await _dbFixture.SaveEntityAsync(entity).ConfigureAwait(false);
+        }
+
+        private async Task<List<ActivityHistoryDB>> InsertActivityHistory(Guid targetId, int count)
         {
             var activityHistories = new List<ActivityHistoryDB>();
 
@@ -63,8 +65,7 @@ namespace ActivityHistoryApi.Tests.V1.Gateways
 
             foreach (var activityHistory in activityHistories)
             {
-                _dynamoDb.SaveAsync(activityHistory).GetAwaiter().GetResult();
-                _cleanup.Add(async () => await _dynamoDb.DeleteAsync(activityHistory, default).ConfigureAwait(false));
+                await InsertDataIntoDynamoDB(activityHistory).ConfigureAwait(false);
             }
 
             return activityHistories;
@@ -87,7 +88,7 @@ namespace ActivityHistoryApi.Tests.V1.Gateways
         public async Task GetByTargetIdReturnsRecords()
         {
             var targetId = Guid.NewGuid();
-            var expected = InsertActivityHistory(targetId, 5);
+            var expected = await InsertActivityHistory(targetId, 5).ConfigureAwait(false);
 
             var query = new GetActivityHistoryByTargetIdQuery() { TargetId = targetId };
             var response = await _classUnderTest.GetByTargetIdAsync(query).ConfigureAwait(false);
@@ -103,7 +104,7 @@ namespace ActivityHistoryApi.Tests.V1.Gateways
         public async Task GetByTargetIdReturnsRecordsAllPages()
         {
             var targetId = Guid.NewGuid();
-            var expected = InsertActivityHistory(targetId, 9);
+            var expected = await InsertActivityHistory(targetId, 9).ConfigureAwait(false);
             var expectedFirstPage = expected.OrderByDescending(x => x.CreatedAt).Take(5);
             var expectedSecondPage = expected.Except(expectedFirstPage).OrderByDescending(x => x.CreatedAt);
 
@@ -128,7 +129,7 @@ namespace ActivityHistoryApi.Tests.V1.Gateways
         public async Task GetByTargetIdReturnsNoPaginationTokenIfPageSizeEqualsRecordCount()
         {
             var targetId = Guid.NewGuid();
-            var expected = InsertActivityHistory(targetId, 10);
+            var expected = await InsertActivityHistory(targetId, 10).ConfigureAwait(false);
 
             var query = new GetActivityHistoryByTargetIdQuery() { TargetId = targetId, PageSize = 10 };
             var response = await _classUnderTest.GetByTargetIdAsync(query).ConfigureAwait(false);
