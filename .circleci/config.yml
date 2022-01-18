@@ -249,7 +249,7 @@ workflows:
           filters:
             branches:
               only: master
-      - terraform-init-and-plan-to-development:
+      - terraform-init-and-plan-development:
           requires:
             - assume-role-development
           filters:
@@ -290,7 +290,7 @@ workflows:
           filters:
              branches:
                only: release
-      - terraform-init-and-plan-to-staging:
+      - terraform-init-and-plan-staging:
           requires:
             - assume-role-staging
           filters:
