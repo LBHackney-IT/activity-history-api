@@ -18,3 +18,9 @@ Feature: DynamoDB is used as our NoSQL database service
     When it contains local_secondary_index
     When I count them
     Then I expect the result is less and equal to 1
+
+  Scenario: Ensure a maximum of 2 GSIs
+    Given I have aws_dynamodb_table defined
+    When it contains global_secondary_index
+    When I count them
+    Then I expect the result is less and equal to 2
