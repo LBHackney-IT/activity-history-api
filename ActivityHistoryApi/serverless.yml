@@ -140,7 +140,7 @@ resources:
                           - 'table/ActivityHistory/index/*'
 custom:
   associateWaf:
-    name: ReferenceApiWafAcl
+    name: ActivityHistoryApiWafAcl
     version: V2  
   vpcId:
     development: vpc-0d15f152935c8716f
