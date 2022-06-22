@@ -13,7 +13,7 @@ WORKDIR /app
 
 # Install and run sonar cloud scanner
 RUN apt-get update && apt-get install -y openjdk-11-jdk
-RUN dotnet tool install --global dotnet-sonarscanner
+RUN dotnet tool install -v quiet --global dotnet-sonarscanner --version 5.5.3
 ENV PATH="$PATH:/root/.dotnet/tools"
 
 RUN dotnet sonarscanner begin /k:"LBHackney-IT_activity-history-api" /o:"lbhackney-it" /d:sonar.host.url=https://sonarcloud.io /d:sonar.login="${SONAR_TOKEN}"
@@ -34,4 +34,4 @@ RUN dotnet build -c Release -o out ActivityHistoryApi/ActivityHistoryApi.csproj
 RUN dotnet build -c debug -o out ActivityHistoryApi.Tests/ActivityHistoryApi.Tests.csproj
 
 CMD dotnet test
-RUN dotnet sonarscanner end /d:sonar.login="${SONAR_TOKEN}" 
+RUN dotnet sonarscanner end /d:sonar.login="${SONAR_TOKEN}"
