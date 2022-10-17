@@ -1,7 +1,7 @@
 service: activity-history-api
 provider:
   name: aws
-  runtime: dotnetcore6.0
+  runtime: dotnet6
   memorySize: 2048
   tracing:
     lambda: true
