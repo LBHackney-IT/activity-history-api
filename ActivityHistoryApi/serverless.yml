@@ -1,7 +1,7 @@
 service: activity-history-api
 provider:
   name: aws
-  runtime: dotnetcore3.1
+  runtime: dotnet6
   memorySize: 2048
   tracing:
     lambda: true
@@ -15,7 +15,7 @@ plugins:
   - '@serverless/safeguards-plugin'
 
 package:
-  artifact: ./bin/release/netcoreapp3.1/activity-history-api.zip
+  artifact: ./bin/release/net6.0/activity-history-api.zip
 
 functions:
   ActivityHistoryApi:
