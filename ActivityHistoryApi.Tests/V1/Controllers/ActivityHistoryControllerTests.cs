@@ -12,12 +12,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace ActivityHistoryApi.Tests.V1.Controllers
+namespace ActivityHistoryApi.Tests.V1.Controllerss
 {
     [Collection("LogCall collection")]
     public class ActivityHistoryControllerTests
     {
         private readonly Mock<IGetByTargetIdUseCase> _mockgetByTargetIdUseCase;
+        private readonly Mock<IGetByTargetIdAndActivityTypeUseCase> _mockGetByTargetIdAndTargetTypeUseCase;
+
         private readonly ActivityHistoryApiController _classUnderTest;
         private readonly Fixture _fixture = new Fixture();
 
@@ -25,7 +27,8 @@ namespace ActivityHistoryApi.Tests.V1.Controllers
         public ActivityHistoryControllerTests()
         {
             _mockgetByTargetIdUseCase = new Mock<IGetByTargetIdUseCase>();
-            _classUnderTest = new ActivityHistoryApiController(_mockgetByTargetIdUseCase.Object);
+            _mockGetByTargetIdAndTargetTypeUseCase = new Mock<IGetByTargetIdAndActivityTypeUseCase>();
+            _classUnderTest = new ActivityHistoryApiController(_mockgetByTargetIdUseCase.Object, _mockGetByTargetIdAndTargetTypeUseCase.Object);
         }
 
         [Theory]

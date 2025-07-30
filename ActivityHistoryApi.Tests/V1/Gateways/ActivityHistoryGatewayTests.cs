@@ -85,6 +85,19 @@ namespace ActivityHistoryApi.Tests.V1.Gateways
         }
 
         [Fact]
+        public async Task GetByTargetIdAndActivityTypeReturnsEmptyIfNoRecords()
+        {
+            var query = new GetActivityHistoryByTargetIdAndActivityTypeQuery() { TargetId = Guid.NewGuid() };
+            var response = await _classUnderTest.GetByTargetIdAndActivityTypeAsync(query).ConfigureAwait(false);
+            response.Should().NotBeNull();
+            response.Results.Should().BeEmpty();
+            response.PaginationDetails.HasNext.Should().BeFalse();
+            response.PaginationDetails.NextToken.Should().BeNull();
+
+            _logger.VerifyExact(LogLevel.Debug, $"Querying ActivityHistoryByCreatedAt index for targetId {query.TargetId}", Times.Once());
+        }
+
+        [Fact]
         public async Task GetByTargetIdReturnsRecords()
         {
             var targetId = Guid.NewGuid();

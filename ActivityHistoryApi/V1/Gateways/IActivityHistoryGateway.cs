@@ -8,5 +8,6 @@ namespace ActivityHistoryApi.V1.Gateways
     public interface IActivityHistoryGateway
     {
         Task<PagedResult<ActivityHistoryEntity>> GetByTargetIdAsync(GetActivityHistoryByTargetIdQuery query);
+        Task<PagedResult<ActivityHistoryEntity>> GetByTargetIdAndActivityTypeAsync(GetActivityHistoryByTargetIdAndActivityTypeQuery query);
     }
 }
