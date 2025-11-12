@@ -332,8 +332,8 @@ workflows:
       #         only: release
       - permit-production-terraform-release:
            type: approval
-            requires:
-              - build-and-test
+          requires:
+            - build-and-test
       - assume-role-production:
           context: api-assume-role-disaster-recovery-context
           requires:
