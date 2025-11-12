@@ -31,7 +31,7 @@ commands:
       - aws_assume_role/assume_role:
           account: <<parameters.aws-account>>
           profile_name: default
-          role: "AWS_ACCOUNT_DISASTER_RECOVERY"
+          role: "LBH_Circle_CI_Deployment_Role"
       - persist_to_workspace:
           root: *workspace_root
           paths:
