@@ -166,7 +166,7 @@ jobs:
     executor: docker-python
     steps:
       - assume-role-and-persist-workspace:
-          aws-account: $AWS_ACCOUNT_PRODUCTION
+          aws-account: $AWS_ACCOUNT_DISASTER_RECOVERY
   terraform-init-and-plan-development:
     executor: docker-terraform
     steps:
@@ -281,7 +281,7 @@ workflows:
   #     - deploy-to-development:
   #         context:
   #           - api-nuget-token-context
-  #           - "Serverless Framework" 
+  #           - "Serverless Framework"
   #         requires:
   #           - terraform-apply-development
   #         filters:
@@ -324,7 +324,7 @@ workflows:
       # - deploy-to-staging:
       #     context:
       #       - api-nuget-token-context
-      #       - "Serverless Framework" 
+      #       - "Serverless Framework"
       #     requires:
       #       - terraform-apply-staging
       #     filters:
@@ -369,7 +369,7 @@ workflows:
       - deploy-to-production:
           context:
             - api-nuget-token-context
-            - "Serverless Framework" 
+            - "Serverless Framework"
           requires:
             - permit-production-release
           # filters:
@@ -419,7 +419,7 @@ workflows:
   # deploy-code-pre-production:
   #   jobs:
   #     - build-and-test:
-  #         context: 
+  #         context:
   #           - api-nuget-token-context
   #           - SonarCloud
   #         filters:
@@ -437,7 +437,7 @@ workflows:
   #         - api-nuget-token-context
   #         - "Serverless Framework"
   #         requires:
-  #           - assume-role-pre-production        
+  #           - assume-role-pre-production
   #         filters:
   #           branches:
   #             only: release
