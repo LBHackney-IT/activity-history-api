@@ -1,4 +1,4 @@
-variable "environment_name" {
+x`variable "environment_name" {
   type    = string
   default = "production"
 }

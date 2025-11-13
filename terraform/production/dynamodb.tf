@@ -1,8 +1,8 @@
 resource "aws_dynamodb_table" "activityhistoryapi_dynamodb_table" {
-  name           = "ActivityHistory"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "targetId"
-  range_key      = "id"
+  name         = "ActivityHistory"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "targetId"
+  range_key    = "id"
 
   attribute {
     name = "id"
@@ -30,11 +30,10 @@ resource "aws_dynamodb_table" "activityhistoryapi_dynamodb_table" {
     projection_type = "ALL"
   }
 
-
   tags = merge(
     local.default_tags,
-    { BackupPolicy = "Prod",
-    Confidentiality = "Internal"
+    { BackupPolicy    = "Prod",
+      Confidentiality = "Internal"
     }
   )
 
