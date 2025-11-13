@@ -33,7 +33,9 @@ resource "aws_dynamodb_table" "activityhistoryapi_dynamodb_table" {
 
   tags = merge(
     local.default_tags,
-    { BackupPolicy = "Prod" }
+    { BackupPolicy = "Prod",
+    Confidentiality = "Internal"
+    }
   )
 
   point_in_time_recovery {
