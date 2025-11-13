@@ -1,6 +1,6 @@
 x`variable "environment_name" {
   type    = string
-  default = "production"
+  default = "Prod"
 }
 
 variable "project_name" {
