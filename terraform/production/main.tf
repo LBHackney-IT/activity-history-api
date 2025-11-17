@@ -31,6 +31,8 @@ locals {
     Environment       = var.environment_name
     terraform-managed = true
     project_name      = var.project_name
+    TeamEmail         = "developmentteam@hackney.gov.uk"
+    Application       = "activity-history-api-${var.environment_name}"
   }
 }
 
