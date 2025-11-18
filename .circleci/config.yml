@@ -49,7 +49,7 @@ commands:
             cd ./terraform/<<parameters.environment>>/
             terraform get -update=true
             terraform init
-            terraform restore aws_dynamodb_table.activityhistoryapi_dynamodb_table ActivityHistory
+            terraform import aws_dynamodb_table.activityhistoryapi_dynamodb_table ActivityHistory
           name: get and init
       - run:
           name: plan
