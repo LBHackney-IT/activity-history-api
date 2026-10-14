@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -55,6 +56,18 @@ namespace ActivityHistoryApi.Tests
         {
             if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name)))
                 Environment.SetEnvironmentVariable(name, defaultValue);
+        }
+
+        protected override IHost CreateHost(IHostBuilder builder)
+        {
+            // The generic host validates scopes in Development; the Hackney test fixture
+            // is a singleton that consumes scoped services
+            builder.UseDefaultServiceProvider(options =>
+            {
+                options.ValidateScopes = false;
+                options.ValidateOnBuild = false;
+            });
+            return base.CreateHost(builder);
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
