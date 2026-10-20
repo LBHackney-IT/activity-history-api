@@ -1,170 +1,128 @@
-# LBH Base API
+# Activity History API
 
-Base API is a boilerplate code for being reused for new APIs for LBH
+The Activity History API is the London Borough of Hackney (LBH) **MTFH** service that exposes the
+**activity/audit history for a target entity**. Other platform services publish domain events describing what
+changed; this API returns the recorded history for a given `targetId`, newest first, with pagination.
+
+It is a read-only, DynamoDB-backed API.
 
 ## Stack
 
-- .NET Core as a web framework.
-- nUnit as a test framework.
+- **.NET 10** (`net10.0`) — ASP.NET Core Web API hosted on **AWS Lambda** via `Amazon.Lambda.AspNetCoreServer`
+  (the managed `dotnet10` runtime).
+- **DynamoDB** as the datastore (via `Hackney.Core.DynamoDb` / `Hackney.Shared.ActivityHistory`).
+- **Swashbuckle** for Swagger/OpenAPI, **FluentValidation** for request validation.
+- **MVC API versioning** (URL segment reader) and `System.Text.Json` with `JsonStringEnumConverter`.
+- **AWS X-Ray** for tracing.
+- **xUnit** + `TestStack.BDDfy` + FluentAssertions/Moq/AutoFixture for tests.
 
-## Dependencies
+## Endpoints
 
-- Universal Housing Simulator
+Versioning uses `UrlSegmentApiVersionReader` with `DefaultApiVersion = 1.0` and
+`AssumeDefaultVersionWhenUnspecified = true`. Only v1 exists.
 
-## Contributing
+| Verb | Route | Request | Response |
+| --- | --- | --- | --- |
+| GET | `/api/v1/activityHistory` | Query: `targetId` (**required**, `Guid`), `paginationToken` (optional), `pageSize` (optional) | `200` → `PagedResult<ActivityHistoryResponseObject>`: `{ "results": [ ... ], "paginationDetails": { "hasNext": bool, "nextToken": string\|null } }`. `404` when no history exists for the target, `400` on model validation failure, `500` on error. |
+| GET | `/api/v1/healthcheck/ping` | — | `200` → health report written by `HealthCheckResponseWriter` (unversioned; mapped outside MVC). Includes a DynamoDB health check. |
+| GET | `/swagger` | — | Swagger UI / OpenAPI document, one document per API version. |
 
-### Setup
+An activity history record contains `Id`, `TargetId`, `TargetType`, `Type`, `CreatedAt`,
+`AuthorDetails { FullName, Email }`, `NewData`, `OldData` and `SourceDomain`.
 
-1. Install [Docker][docker-download].
-2. Install [AWS CLI][AWS-CLI].
-3. Clone this repository.
-4. Rename the initial template.
-5. Open it in your IDE.
+Serialisation uses MVC's System.Text.Json with web defaults (camelCase) plus a `JsonStringEnumConverter`, so
+enum values are emitted as strings. All endpoints sit behind the API Gateway request authorizer and API key.
 
-### Renaming
+## Data sources and external dependencies
 
-The renaming of `base-api` into `SomethingElseApi` can be done by running a Renamer powershell script. To do so:
-1. Open the powershell and navigate to this directory's root.
-2. Run the script using the following command:
-```
-.\Renamer.ps1 -apiName My_Api
-```
+| Dependency | Detail |
+| --- | --- |
+| DynamoDB table `ActivityHistory` | `targetId` (HASH) + `id` (RANGE), local secondary index `ActivityHistoryByCreatedAt` (range `createdAt`), TTL attribute `TimetoLiveForRecord`, `PAY_PER_REQUEST` billing, point-in-time recovery enabled. Defined identically in every environment under `terraform/*/dynamodb.tf`. |
+| DynamoDB access | `dynamodb:*` granted on `table/ActivityHistory` and `table/ActivityHistory/index/*` (`serverless.yml`). |
+| Local DynamoDB | `amazon/dynamodb-local` on port 8000 (`docker-compose.yml`), with `DynamoDb_LocalMode=true` and `DynamoDb_LocalServiceUrl=http://localhost:8000` (`appsettings.DevelopmentLocal.json`). |
+| AWS region | `eu-west-2`. |
+| AWS X-Ray | `AWSSDKHandler.RegisterXRayForAllServices()`, `AWSXRayRecorder.InitializeInstance/RegisterLogger`, `app.UseXRay("activity-history-api")`; `AWSXRayDaemonWriteAccess` on the Lambda role. |
+| AWS SSM Parameter Store | `/housing-tl/{stage}/aspnetcore-environment`; CloudWatch alarm topic ARN. |
+| S3 | Only the Terraform remote-state buckets — the application itself does not use S3. `database.env` (Postgres credentials) is a stale template leftover: this service has no SQL database. |
 
-If your ***script execution policy*** prevents you from running the script, you can temporarily ***bypass*** that with:
-```
-powershell -noprofile -ExecutionPolicy Bypass -file .\Renamer.ps1 -apiName My_Api
-```
+## Setup
 
-Or you can change your execution policy, prior to running the script, permanently with _(this disables security so, be cautious)_:
-```
-Set-ExecutionPolicy Unrestricted
-```
+### Prerequisites
 
-After the renaming is done, the ***script will ask you if you want to delete it as well***, as it's useless now - It's your choice.
+1. [Docker][docker-download] with the **`docker compose`** v2 plugin.
+2. A **`LBHPACKAGESTOKEN`** with `read:packages` access to the `LBHackney-IT` GitHub Packages feed — the
+   `Hackney.*` packages are not published to nuget.org:
+   ```sh
+   export LBHPACKAGESTOKEN=<token>
+   ```
+3. Optionally copy [`.env.sample`](.env.sample) to `.env` and set `LBHPACKAGESTOKEN` there instead of
+   exporting it — `docker compose` reads `.env` for the values referenced in `docker-compose.yml`. The file
+   also lists every environment variable the API reads at runtime; those are **not** loaded from `.env`, so
+   export them (or add them to the compose service) if you need to override the defaults.
 
-#### On OSX
+### Build and run
 
-Use Docker to run this script on Macs:
-```
-docker run -it -v `pwd`:/app mcr.microsoft.com/powershell
-```
-
-### Development
-
-To serve the application, run it using your IDE of choice, we use Visual Studio CE and JetBrains Rider on Mac.
-
-**Note**
-When running locally the appropriate database conneciton details are still needed.
-##### Postgres
-For Postgres an approprate `CONNECTION_STRING` environment variable is needed,
-and if you want to use a local Postgres instance then that will of course need to be installed and running.
-##### DynamoDb
-To use a local instance of DynamoDb, this will need to be installed. This is most easily done using [Docker](https://www.docker.com/products/docker-desktop).
-Run the following command, specifying the local path where you want the container's shared volume to be stored.
-```
-docker run --name dynamodb-local -p 8000:8000 -v <PUT YOUR LOCAL PATH HERE>:/data/ amazon/dynamodb-local -jar DynamoDBLocal.jar -sharedDb -dbPath /data
-```
-
-If you would like to see what is in your local DynamoDb instance using a simple gui, then [this admin tool](https://github.com/aaronshaf/dynamodb-admin) can do that.
-
-The application can also be served locally using docker:
-1.  Add you security credentials to AWS CLI.
 ```sh
-$ aws configure
-```
-2. Log into AWS ECR.
-```sh
-$ aws ecr get-login --no-include-email
-```
-3. Build and serve the application. It will be available in the port 3000.
-```sh
-$ make build && make serve
+git clone git@github.com:LBHackney-IT/activity-history-api.git
+cd activity-history-api
+make build     # docker compose build activity-history-api
+make serve     # build and start the API plus a local DynamoDB (port 3000)
+make shell     # bash inside the API container
 ```
 
-### Release process
-
-We use a pull request workflow, where changes are made on a branch and approved by one or more other maintainers before the developer can merge into `master` branch.
-
-![Circle CI Workflow Example](docs/circle_ci_workflow.png)
-
-Then we have an automated six step deployment process, which runs in CircleCI.
-
-1. Automated tests (nUnit) are run to ensure the release is of good quality.
-2. The application is deployed to development automatically, where we check our latest changes work well.
-3. We manually confirm a staging deployment in the CircleCI workflow once we're happy with our changes in development.
-4. The application is deployed to staging.
-5. We manually confirm a production deployment in the CircleCI workflow once we're happy with our changes in staging.
-6. The application is deployed to production.
-
-Our staging and production environments are hosted by AWS. We would deploy to production per each feature/config merged into  `master`  branch.
-
-### Creating A PR
-
-To help with making changes to code easier to understand when being reviewed, we've added a PR template.
-When a new PR is created on a repo that uses this API template, the PR template will automatically fill in the `Open a pull request` description textbox.
-The PR author can edit and change the PR description using the template as a guide.
-
-## Static Code Analysis
-
-### Using [FxCop Analysers](https://www.nuget.org/packages/Microsoft.CodeAnalysis.FxCopAnalyzers)
-
-FxCop runs code analysis when the Solution is built.
-
-Both the API and Test projects have been set up to **treat all warnings from the code analysis as errors** and therefore, fail the build.
-
-However, we can select which errors to suppress by setting the severity of the responsible rule to none, e.g `dotnet_analyzer_diagnostic.<Category-or-RuleId>.severity = none`, within the `.editorconfig` file.
-Documentation on how to do this can be found [here](https://docs.microsoft.com/en-us/visualstudio/code-quality/use-roslyn-analyzers?view=vs-2019).
+`make test-database`-style helpers are not available; the local DynamoDB service is named
+`dynamodb-database` in `docker-compose.yml`.
 
 ## Testing
 
-### Run the tests
-
 ```sh
-$ make test
+make test
 ```
 
-To run database tests locally (e.g. via Visual Studio) and you are using Postgres the `CONNECTION_STRING` environment variable will need to be populated with:
+`make test` builds the test image (`ActivityHistoryApi.Tests/Dockerfile`) and runs the xUnit suite inside it
+against the compose-provided DynamoDB instance.
 
-`Host=localhost;Database=testdb;Username=postgres;Password=mypassword"`
+The suite covers the controller/use case/gateway units plus BDDfy E2E stories that boot the real HTTP pipeline
+through `Microsoft.AspNetCore.Mvc.Testing`'s `WebApplicationFactory` and assert the DynamoDB-backed responses
+and the health endpoint.
 
-Note: The Host name needs to be the name of the stub database docker-compose service, in order to run tests via Docker.
+### Agreed testing approach
 
-If changes to the database schema are made then the docker image for the database will have to be removed and recreated. The restart-db make command will do this for you.
+- xUnit with `TestStack.BDDfy` for E2E stories, FluentAssertions, Moq and AutoFixture.
+- Tests should be independent of each other.
+- Gateway tests interact with a real (containerised) DynamoDB instance.
+- Unit and E2E tests run in CI.
+- Test coverage should never go down.
 
-### Agreed Testing Approach
-- Use nUnit, FluentAssertions and Moq
-- Always follow a TDD approach
-- Tests should be independent of each other
-- Gateway tests should interact with a real test instance of the database
-- Test coverage should never go down
-- All use cases should be covered by E2E tests
-- Optimise when test run speed starts to hinder development
-- Unit tests and E2E tests should run in CI
-- Test database schemas should match up with production database schema
-- Have integration tests which test from the PostgreSQL database to API Gateway
+## Deployment
 
-## Data Migrations
-### A good data migration
-- Record failure logs
-- Automated
-- Reliable
-- As close to real time as possible
-- Observable monitoring in place
-- Should not affect any existing databases
+CircleCI (`.circleci/config.yml`) gates deployment on a code-formatting check (`dotnet-format --check`), the
+Docker test suite and SonarCloud analysis, then deploys infrastructure with **Terraform** and the Lambda with
+the **Serverless Framework**. Changes are reviewed and approved on a branch before merging.
+
+**Stages and triggers:**
+
+- **Any branch** — formatting check, tests, and a Terraform plan plus compliance pass against development.
+  Nothing is applied or deployed.
+- **`master`** — after the checks pass, Terraform applies to development and the function is deployed to
+  **development**.
+- **`release`** — tests, then Terraform and deployment to **staging**. Production follows only after the
+  `permit-production-terraform-release` and `permit-production-release` manual approvals.
+- **`release`** — the separate `deploy-terraform-pre-production` and `deploy-code-pre-production` workflows
+  deploy **pre-production**, each behind its own manual approval.
+
+**Packaging and runtime:**
+
+- `build.sh` installs `Amazon.Lambda.Tools` and runs
+  `dotnet lambda package --configuration release --framework net10.0 --output-package ./bin/release/net10.0/activity-history-api.zip`.
+  (`build.cmd` is the Windows equivalent for local use.)
+- The deploy job runs `npx --yes serverless@^4 deploy --stage <stage> --conceal`.
+- `serverless.yml` declares `runtime: dotnet10`, consumes that artifact, and exposes `ANY /{proxy+}` plus
+  `GET /swagger/{proxy+}` behind the request authorizer, with the `Platform_APIs_Web_ACL` WAF attached.
 
 ## Contacts
 
-### Active Maintainers
-
-- **Selwyn Preston**, Lead Developer at London Borough of Hackney (selwyn.preston@hackney.gov.uk)
-- **Mirela Georgieva**, Lead Developer at London Borough of Hackney (mirela.georgieva@hackney.gov.uk)
-- **Matt Keyworth**, Lead Developer at London Borough of Hackney (matthew.keyworth@hackney.gov.uk)
-
-### Other Contacts
-
-- **Rashmi Shetty**, Product Owner at London Borough of Hackney (rashmi.shetty@hackney.gov.uk)
+**Housing product team** — [mmh-project-team@hackney.gov.uk](mailto:mmh-project-team@hackney.gov.uk)
 
 [docker-download]: https://www.docker.com/products/docker-desktop
-[universal-housing-simulator]: https://github.com/LBHackney-IT/lbh-universal-housing-simulator
-[made-tech]: https://madetech.com/
 [AWS-CLI]: https://aws.amazon.com/cli/
