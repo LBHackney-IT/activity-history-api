@@ -45,6 +45,35 @@ enum values are emitted as strings. All endpoints sit behind the API Gateway req
 | AWS SSM Parameter Store | `/housing-tl/{stage}/aspnetcore-environment`; CloudWatch alarm topic ARN. |
 | S3 | Only the Terraform remote-state buckets — the application itself does not use S3. `database.env` (Postgres credentials) is a stale template leftover: this service has no SQL database. |
 
+## Related repositories
+
+This service is one of three repositories that make up the activity history feature. Other services across
+the platform emit events when their data changes; the listener turns those events into activity records, they
+are stored in one shared history, and this API serves that history back.
+
+| Repository | Purpose |
+| --- | --- |
+| [LBHackney-IT/activity-history-listener](https://github.com/LBHackney-IT/activity-history-listener) | **Builds the history.** Watches for events emitted by other services and records each change as an activity entry. |
+| [LBHackney-IT/activity-history-shared](https://github.com/LBHackney-IT/activity-history-shared) | **Defines the history.** The package the other two share so that what the listener records is exactly what this API returns. |
+| [LBHackney-IT/activity-history-api](https://github.com/LBHackney-IT/activity-history-api) | **Serves the history.** This service — returns the recorded activity for a given entity over HTTP. |
+
+```mermaid
+flowchart LR
+    A[Other services] -->|changes emit events| B[activity-history-listener]
+    B -->|records activity| C[(Activity history)]
+    C -->|read| D[activity-history-api]
+    S[activity-history-shared] -.-> B
+    S -.-> D
+```
+
+**How they fit together:**
+
+- Other services never write history themselves. They emit events when their data changes, and the listener
+  picks those up and makes the corresponding inserts.
+- This API only ever reads the recorded history — it does not create or modify it.
+- Both sides use the shared package so that a record written by the listener is understood the same way when
+  it is read back here.
+
 ## Setup
 
 ### Prerequisites
