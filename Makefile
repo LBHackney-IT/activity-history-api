@@ -16,7 +16,7 @@ shell:
 
 .PHONY: test
 test:
-	docker compose up test-database & docker compose build activity-history-api-test && docker compose up activity-history-api-test
+	docker compose build activity-history-api-test && docker compose run activity-history-api-test
 
 .PHONY: lint
 lint:
