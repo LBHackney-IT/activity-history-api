@@ -1,18 +1,18 @@
 version: 2.1
 
 orbs:
-  aws_assume_role: lbh-hackit/aws_assume_role@0.1.0
+  aws_assume_role: lbh-hackit/aws_assume_role@0.1.1
 
 executors:
   docker-python:
     docker:
-      - image: cimg/python:3.7
+      - image: cimg/python:3.12
   docker-terraform:
     docker:
       - image: "hashicorp/terraform:1.1.9"
   docker-dotnet:
     docker:
-      - image: mcr.microsoft.com/dotnet/sdk:8.0
+      - image: mcr.microsoft.com/dotnet/sdk:10.0
 
 references:
   workspace_root: &workspace_root "~"
@@ -149,10 +149,10 @@ jobs:
       - setup_remote_docker
       - run:
           name: build
-          command: docker-compose build activity-history-api-test
+          command: docker compose build activity-history-api-test
       - run:
           name: Run tests
-          command: docker-compose run activity-history-api-test
+          command: docker compose run activity-history-api-test
   assume-role-development:
     executor: docker-python
     steps:
