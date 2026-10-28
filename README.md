@@ -4,154 +4,82 @@ The Activity History API is the London Borough of Hackney (LBH) **MTFH** service
 **activity/audit history for a target entity**. Other platform services publish domain events describing what
 changed; this API returns the recorded history for a given `targetId`, newest first, with pagination.
 
-It is a read-only, DynamoDB-backed API.
+It is a read-only, DynamoDB-backed API: it never creates, updates or deletes activity records.
 
-## Stack
+## Tech stack
 
-- **.NET 10** (`net10.0`) — ASP.NET Core Web API hosted on **AWS Lambda** via `Amazon.Lambda.AspNetCoreServer`
-  (the managed `dotnet10` runtime).
-- **DynamoDB** as the datastore (via `Hackney.Core.DynamoDb` / `Hackney.Shared.ActivityHistory`).
-- **Swashbuckle** for Swagger/OpenAPI, **FluentValidation** for request validation.
-- **MVC API versioning** (URL segment reader) and `System.Text.Json` with `JsonStringEnumConverter`.
-- **AWS X-Ray** for tracing.
-- **xUnit** + `TestStack.BDDfy` + FluentAssertions/Moq/AutoFixture for tests.
+| Area | Technology |
+| --- | --- |
+| Runtime | **.NET 10** (`net10.0`), ASP.NET Core Web API |
+| Hosting | **AWS Lambda** (`dotnet10` managed runtime) via `Amazon.Lambda.AspNetCoreServer`, in AWS region `eu-west-2` |
+| API layer | Amazon **API Gateway** (`ANY /{proxy+}`) behind a request authorizer and the `Platform_APIs_Web_ACL` WAF |
+| Datastore | **DynamoDB** table `ActivityHistory`, accessed via the `Hackney.Core.DynamoDb` and `Hackney.Shared.ActivityHistory` packages |
+| Infrastructure | **Terraform** (DynamoDB table, VPC/subnets, security group) per environment under [`terraform/`](terraform) |
+| Deployment | **Serverless Framework** ([`serverless.yml`](ActivityHistoryApi/serverless.yml)) driven by **CircleCI** |
+| Observability | **AWS X-Ray** tracing, `Hackney.Core.Logging` structured logging |
+| API docs | **Swashbuckle** (Swagger/OpenAPI), one document per API version |
+| Cross-cutting | `Hackney.Core.*` packages (DynamoDB, health checks, JWT, logging, middleware, validation), FluentValidation for request validation, MVC API versioning (URL segment reader), `System.Text.Json` with web defaults (camelCase) plus `JsonStringEnumConverter` (enums emitted as strings) |
+| Testing | xUnit, `TestStack.BDDfy`, FluentAssertions, Moq, AutoFixture, `Microsoft.AspNetCore.Mvc.Testing` |
 
 ## Endpoints
 
 Versioning uses `UrlSegmentApiVersionReader` with `DefaultApiVersion = 1.0` and
 `AssumeDefaultVersionWhenUnspecified = true`. Only v1 exists.
 
-| Verb | Route | Request | Response |
-| --- | --- | --- | --- |
-| GET | `/api/v1/activityHistory` | Query: `targetId` (**required**, `Guid`), `paginationToken` (optional), `pageSize` (optional) | `200` → `PagedResult<ActivityHistoryResponseObject>`: `{ "results": [ ... ], "paginationDetails": { "hasNext": bool, "nextToken": string\|null } }`. `404` when no history exists for the target, `400` on model validation failure, `500` on error. |
-| GET | `/api/v1/healthcheck/ping` | — | `200` → health report written by `HealthCheckResponseWriter` (unversioned; mapped outside MVC). Includes a DynamoDB health check. |
-| GET | `/swagger` | — | Swagger UI / OpenAPI document, one document per API version. |
+| Verb | Route | Request (model) | Response (model) | Summary |
+| --- | --- | --- | --- | --- |
+| GET | `/api/v1/activityHistory` | `GetActivityHistoryByTargetIdQuery` — query string: `targetId` (**required**, `Guid`), `paginationToken` (optional), `pageSize` (optional, defaults to 10) | `200 OK` → `PagedResult<ActivityHistoryResponseObject>` — `{ "results": [...], "paginationDetails": { "hasNext": bool, "nextToken": string\|null } }` | Returns the recorded activity history for the supplied `targetId`, newest first and paginated via the `ActivityHistoryByCreatedAt` index. Returns `404` when no history exists for the target, `400` on validation failure and `500` on error. |
+| GET | `/api/v1/healthcheck/ping` | — | Health report written by `HealthCheckResponseWriter` | Unversioned liveness/readiness probe (mapped outside MVC); includes a DynamoDB health check. |
+| GET | `/swagger` | — | OpenAPI document / Swagger UI | Interactive API documentation with one document per API version; declares the `X-Api-Key` security requirement for API calls. |
 
-An activity history record contains `Id`, `TargetId`, `TargetType`, `Type`, `CreatedAt`,
-`AuthorDetails { FullName, Email }`, `NewData`, `OldData` and `SourceDomain`.
+An activity history record (`ActivityHistoryResponseObject`) contains `Id`, `TargetId`, `TargetType`, `Type`,
+`CreatedAt`, `AuthorDetails { FullName, Email }`, `NewData`, `OldData` and `SourceDomain`.
 
-Serialisation uses MVC's System.Text.Json with web defaults (camelCase) plus a `JsonStringEnumConverter`, so
-enum values are emitted as strings. All endpoints sit behind the API Gateway request authorizer and API key.
-
-## Data sources and external dependencies
-
-| Dependency | Detail |
-| --- | --- |
-| DynamoDB table `ActivityHistory` | `targetId` (HASH) + `id` (RANGE), local secondary index `ActivityHistoryByCreatedAt` (range `createdAt`), TTL attribute `TimetoLiveForRecord`, `PAY_PER_REQUEST` billing, point-in-time recovery enabled. Defined identically in every environment under `terraform/*/dynamodb.tf`. |
-| DynamoDB access | `dynamodb:*` granted on `table/ActivityHistory` and `table/ActivityHistory/index/*` (`serverless.yml`). |
-| Local DynamoDB | `amazon/dynamodb-local` on port 8000 (`docker-compose.yml`), with `DynamoDb_LocalMode=true` and `DynamoDb_LocalServiceUrl=http://localhost:8000` (`appsettings.DevelopmentLocal.json`). |
-| AWS region | `eu-west-2`. |
-| AWS X-Ray | `AWSSDKHandler.RegisterXRayForAllServices()`, `AWSXRayRecorder.InitializeInstance/RegisterLogger`, `app.UseXRay("activity-history-api")`; `AWSXRayDaemonWriteAccess` on the Lambda role. |
-| AWS SSM Parameter Store | `/housing-tl/{stage}/aspnetcore-environment`; CloudWatch alarm topic ARN. |
-| S3 | Only the Terraform remote-state buckets — the application itself does not use S3. `database.env` (Postgres credentials) is a stale template leftover: this service has no SQL database. |
+Served through API Gateway, the activity history and health endpoints sit behind the request authorizer;
+`GET /swagger/{proxy+}` is public. Swagger declares an `X-Api-Key` security scheme for API calls.
 
 ## Related repositories
 
-This service is one of three repositories that make up the activity history feature. Other services across
+This service is one of several repositories that make up the activity history feature. Other services across
 the platform emit events when their data changes; the listener turns those events into activity records, they
 are stored in one shared history, and this API serves that history back.
 
-| Repository | Purpose |
+| Repository | Summary |
 | --- | --- |
-| [LBHackney-IT/activity-history-listener](https://github.com/LBHackney-IT/activity-history-listener) | **Builds the history.** Watches for events emitted by other services and records each change as an activity entry. |
-| [LBHackney-IT/activity-history-shared](https://github.com/LBHackney-IT/activity-history-shared) | **Defines the history.** The package the other two share so that what the listener records is exactly what this API returns. |
-| [LBHackney-IT/activity-history-api](https://github.com/LBHackney-IT/activity-history-api) | **Serves the history.** This service — returns the recorded activity for a given entity over HTTP. |
+| [activity-history-api](https://github.com/LBHackney-IT/activity-history-api) | **Serves the history.** This repository — a read-only HTTP API over the recorded activity for a given entity. |
+| [activity-history-listener](https://github.com/LBHackney-IT/activity-history-listener) | **Builds the history.** An AWS Lambda that consumes events published by other services and writes the corresponding activity records to DynamoDB. |
+| [activity-history-shared](https://github.com/LBHackney-IT/activity-history-shared) | **Defines the history.** The `Hackney.Shared.ActivityHistory` NuGet package (domain entity, request/response models, factories) used by both the API and the listener so records are written and read consistently. |
+| [mtfh-frontend-activity-history](https://github.com/LBHackney-IT/mtfh-frontend-activity-history) | **Displays the history.** The MTFH micro-frontend that calls this API to render an entity's activity timeline. |
 
 ```mermaid
 flowchart LR
-    A[Other services] -->|changes emit events| B[activity-history-listener]
-    B -->|records activity| C[(Activity history)]
-    C -->|read| D[activity-history-api]
+    A[Other services] -->|emit change events| B[activity-history-listener]
+    B -->|writes activity records| C[(ActivityHistory)]
+    C -->|reads| D[activity-history-api]
+    D -->|serves history| E[mtfh-frontend-activity-history]
     S[activity-history-shared] -.-> B
     S -.-> D
 ```
 
-**How they fit together:**
+## Data sources and external dependencies
 
-- Other services never write history themselves. They emit events when their data changes, and the listener
-  picks those up and makes the corresponding inserts.
-- This API only ever reads the recorded history — it does not create or modify it.
-- Both sides use the shared package so that a record written by the listener is understood the same way when
-  it is read back here.
+| Source | Summary |
+| --- | --- |
+| DynamoDB table `ActivityHistory` | The only data store. Read via `ActivityHistoryDbGateway` using the local secondary index `ActivityHistoryByCreatedAt` (range key `createdAt`, newest first). Keys: `targetId` (HASH) + `id` (RANGE); TTL attribute `TimetoLiveForRecord`; `PAY_PER_REQUEST` billing; point-in-time recovery enabled. Defined identically per environment in [`terraform/*/dynamodb.tf`](terraform). |
+| DynamoDB Local (`amazon/dynamodb-local`) | Local emulator on port 8000, supplied by [`docker-compose.yml`](docker-compose.yml) for development and tests (`DynamoDb_LocalMode=true`). |
+| Amazon API Gateway | Fronts the Lambda: `ANY /{proxy+}` and `GET /swagger/{proxy+}`, CORS, request authorizer (`api-gateway-lambda-authorizer`, or `api-auth-verify-token-new-*` in pre-production) and the `Platform_APIs_Web_ACL` WAF. |
+| AWS X-Ray | Tracing of inbound requests (`app.UseXRay("activity-history-api")`) and AWS SDK calls (`AWSSDKHandler.RegisterXRayForAllServices()`), configured with `AWSXRayRecorder.InitializeInstance/RegisterLogger`; the Lambda role has `AWSXRayDaemonWriteAccess`. |
+| AWS SSM Parameter Store | `/housing-tl/{stage}/aspnetcore-environment` supplies the Lambda's `ASPNETCORE_ENVIRONMENT` (declared in [`serverless.yml`](ActivityHistoryApi/serverless.yml)); `/housing-tl/{stage}/cloudwatch-alarms-topic-arn` is read by the Terraform `api-alarm` module. |
+| AWS IAM / CloudWatch Logs | The Lambda role grants DynamoDB `BatchGet*`, `BatchWrite`, `DeleteItem`, `DescribeStream`, `DescribeTable`, `Get*`, `PutItem`, `Query`, `Scan` and `UpdateItem` on `table/ActivityHistory` and `table/ActivityHistory/index/*`, plus logging to `/aws/lambda/*`. |
+| Terraform S3 backend | Remote state buckets only; the application itself does not use S3. |
 
-## Setup
+There are no outbound HTTP calls to other services — the API only reads DynamoDB. `database.env` is a stale
+template leftover and is not used (this service has no SQL database).
 
-### Prerequisites
+## Contributing
 
-1. [Docker][docker-download] with the **`docker compose`** v2 plugin.
-2. A **`LBHPACKAGESTOKEN`** with `read:packages` access to the `LBHackney-IT` GitHub Packages feed — the
-   `Hackney.*` packages are not published to nuget.org:
-   ```sh
-   export LBHPACKAGESTOKEN=<token>
-   ```
-3. Optionally copy [`.env.sample`](.env.sample) to `.env` and set `LBHPACKAGESTOKEN` there instead of
-   exporting it — `docker compose` reads `.env` for the values referenced in `docker-compose.yml`. The file
-   also lists every environment variable the API reads at runtime; those are **not** loaded from `.env`, so
-   export them (or add them to the compose service) if you need to override the defaults.
-
-### Build and run
-
-```sh
-git clone git@github.com:LBHackney-IT/activity-history-api.git
-cd activity-history-api
-make build     # docker compose build activity-history-api
-make serve     # build and start the API plus a local DynamoDB (port 3000)
-make shell     # bash inside the API container
-```
-
-`make test-database`-style helpers are not available; the local DynamoDB service is named
-`dynamodb-database` in `docker-compose.yml`.
-
-## Testing
-
-```sh
-make test
-```
-
-`make test` builds the test image (`ActivityHistoryApi.Tests/Dockerfile`) and runs the xUnit suite inside it
-against the compose-provided DynamoDB instance.
-
-The suite covers the controller/use case/gateway units plus BDDfy E2E stories that boot the real HTTP pipeline
-through `Microsoft.AspNetCore.Mvc.Testing`'s `WebApplicationFactory` and assert the DynamoDB-backed responses
-and the health endpoint.
-
-### Agreed testing approach
-
-- xUnit with `TestStack.BDDfy` for E2E stories, FluentAssertions, Moq and AutoFixture.
-- Tests should be independent of each other.
-- Gateway tests interact with a real (containerised) DynamoDB instance.
-- Unit and E2E tests run in CI.
-- Test coverage should never go down.
-
-## Deployment
-
-CircleCI (`.circleci/config.yml`) gates deployment on a code-formatting check (`dotnet-format --check`), the
-Docker test suite and SonarCloud analysis, then deploys infrastructure with **Terraform** and the Lambda with
-the **Serverless Framework**. Changes are reviewed and approved on a branch before merging.
-
-**Stages and triggers:**
-
-- **Any branch** — formatting check, tests, and a Terraform plan plus compliance pass against development.
-  Nothing is applied or deployed.
-- **`master`** — after the checks pass, Terraform applies to development and the function is deployed to
-  **development**.
-- **`release`** — tests, then Terraform and deployment to **staging**. Production follows only after the
-  `permit-production-terraform-release` and `permit-production-release` manual approvals.
-- **`release`** — the separate `deploy-terraform-pre-production` and `deploy-code-pre-production` workflows
-  deploy **pre-production**, each behind its own manual approval.
-
-**Packaging and runtime:**
-
-- `build.sh` installs `Amazon.Lambda.Tools` and runs
-  `dotnet lambda package --configuration release --framework net10.0 --output-package ./bin/release/net10.0/activity-history-api.zip`.
-  (`build.cmd` is the Windows equivalent for local use.)
-- The deploy job runs `npx --yes serverless@^4 deploy --stage <stage> --conceal`.
-- `serverless.yml` declares `runtime: dotnet10`, consumes that artifact, and exposes `ANY /{proxy+}` plus
-  `GET /swagger/{proxy+}` behind the request authorizer, with the `Platform_APIs_Web_ACL` WAF attached.
+Build, run, test and deployment instructions live in [CONTRIBUTION.md](CONTRIBUTION.md).
 
 ## Contacts
 
 **Housing product team** — [mmh-project-team@hackney.gov.uk](mailto:mmh-project-team@hackney.gov.uk)
-
-[docker-download]: https://www.docker.com/products/docker-desktop
-[AWS-CLI]: https://aws.amazon.com/cli/
