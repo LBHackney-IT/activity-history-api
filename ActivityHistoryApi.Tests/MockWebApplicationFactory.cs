@@ -45,6 +45,7 @@ namespace ActivityHistoryApi.Tests
 
         public MockWebApplicationFactory()
         {
+            EnsureEnvVarConfigured("AWS_XRAY_CONTEXT_MISSING", "LOG_ERROR");
             EnsureEnvVarConfigured("DynamoDb_LocalMode", "true");
             EnsureEnvVarConfigured("DynamoDb_LocalServiceUrl", "http://localhost:8000");
 
@@ -64,6 +65,7 @@ namespace ActivityHistoryApi.Tests
             builder.ConfigureServices(services =>
             {
                 services.ConfigureDynamoDB();
+                services.AddScoped<IDynamoDbFixture, DynamoDbFixture>();
                 services.ConfigureDynamoDbFixture();
 
                 var serviceProvider = services.BuildServiceProvider();
