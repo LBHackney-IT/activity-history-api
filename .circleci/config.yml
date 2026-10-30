@@ -13,9 +13,6 @@ executors:
   docker-dotnet:
     docker:
       - image: mcr.microsoft.com/dotnet/sdk:10.0
-  docker-node:
-    docker:
-      - image: cimg/node:20.19
 
 references:
   workspace_root: &workspace_root "~"
@@ -132,60 +129,6 @@ commands:
             npm i serverless-associate-waf
             npm i @serverless/safeguards-plugin --save-dev
             npx --yes serverless@^4 deploy --stage <<parameters.stage>> --conceal
-  remove-serverless-stack:
-    description: "Removes a Serverless stack without creating deployment artifacts"
-    parameters:
-      stage:
-        type: string
-    steps:
-      - *attach_workspace
-      - checkout
-      - run:
-          name: Install Serverless Framework v4
-          command: sudo npm install --global serverless@^4
-      - run:
-          name: Remove Serverless stack
-          no_output_timeout: 45m
-          command: |
-            cd ./ActivityHistoryApi/
-            sls remove --config serverless.teardown.yml --stage <<parameters.stage>> --region eu-west-2
-  terraform-plan-destroy:
-    description: "Creates a Terraform destroy plan for review before apply"
-    parameters:
-      environment:
-        type: string
-    steps:
-      - *attach_workspace
-      - checkout
-      - run:
-          name: Create destroy plan
-          command: |
-            cd ./terraform/<<parameters.environment>>/
-            terraform get -update=true
-            terraform init -input=false
-            terraform plan -destroy -input=false -out=/tmp/terraform-destroy.plan
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - terraform-destroy.plan
-  terraform-apply-destroy-plan:
-    description: "Applies the approved Terraform destroy plan"
-    parameters:
-      environment:
-        type: string
-    steps:
-      - *attach_workspace
-      - checkout
-      - run:
-          name: Initialize Terraform
-          command: |
-            cd ./terraform/<<parameters.environment>>/
-            terraform init -input=false
-      - run:
-          name: Apply destroy plan
-          command: |
-            cd ./terraform/<<parameters.environment>>/
-            terraform apply -input=false -auto-approve ~/terraform-destroy.plan
 
 jobs:
   check-code-formatting:
@@ -285,52 +228,9 @@ jobs:
     steps:
       - deploy-lambda:
           stage: "production"
-  assume-role-pre-production:
-    executor: docker-python
-    steps:
-      - assume-role-and-persist-workspace:
-          aws-account: $AWS_ACCOUNT_PRE_PRODUCTION
-  terraform-init-and-plan-pre-production:
-    executor: docker-terraform
-    steps:
-      - terraform-init-then-plan:
-          environment: "pre-production"
-  terraform-compliance-pre-production:
-    executor: docker-terraform
-    steps:
-      - terraform-compliance:
-          environment: "pre-production"
-  terraform-apply-pre-production:
-    executor: docker-terraform
-    steps:
-      - terraform-apply:
-          environment: "pre-production"
-  deploy-to-pre-production:
-    executor: docker-dotnet
-    steps:
-      - deploy-lambda:
-          stage: "pre-production"
-  remove-serverless-pre-production:
-    executor: docker-node
-    steps:
-      - remove-serverless-stack:
-          stage: "pre-production"
-  terraform-plan-destroy-pre-production:
-    executor: docker-terraform
-    steps:
-      - terraform-plan-destroy:
-          environment: "pre-production"
-  terraform-destroy-pre-production:
-    executor: docker-terraform
-    steps:
-      - terraform-apply-destroy-plan:
-          environment: "pre-production"
 
 workflows:
   check-and-deploy-development:
-    when:
-      not:
-        equal: ["eat/ssi-1369-teardown-pre-production", << pipeline.git.branch >>]
     jobs:
       - check-code-formatting:
           context: api-nuget-token-context
@@ -364,9 +264,7 @@ workflows:
             branches:
               only: master
   check-and-deploy-staging-and-production:
-    when:
-      equal: [release, << pipeline.git.branch >>]
-    jobs:
+      jobs:
       - build-and-test:
           context:
               - api-nuget-token-context
@@ -453,109 +351,3 @@ workflows:
           filters:
             branches:
               only: release
-
-  deploy-terraform-pre-production:
-    when:
-      equal: [release, << pipeline.git.branch >>]
-    jobs:
-      - permit-pre-production-terraform-workflow:
-          type: approval
-          filters:
-            branches:
-              only: release
-      - assume-role-pre-production:
-          context: api-assume-role-housing-pre-production-context
-          requires:
-            - permit-pre-production-terraform-workflow
-          filters:
-            branches:
-              only: release
-      - terraform-init-and-plan-pre-production:
-          requires:
-            - assume-role-pre-production
-          filters:
-            branches:
-              only: release
-      - terraform-compliance-pre-production:
-          requires:
-            - terraform-init-and-plan-pre-production
-          filters:
-            branches:
-              only: release
-      - permit-pre-production-terraform-deployment:
-          type: approval
-          requires:
-            - terraform-compliance-pre-production
-          filters:
-            branches:
-              only: release
-      - terraform-apply-pre-production:
-          requires:
-            - permit-pre-production-terraform-deployment
-          filters:
-            branches:
-              only: release
-
-  deploy-code-pre-production:
-    when:
-      equal: [release, << pipeline.git.branch >>]
-    jobs:
-      - build-and-test:
-          context: 
-            - api-nuget-token-context
-            - SonarCloud
-          filters:
-            branches:
-              only: release
-      - assume-role-pre-production:
-          context: api-assume-role-housing-pre-production-context
-          requires:
-            - build-and-test
-          filters:
-            branches:
-              only: release
-      - deploy-to-pre-production:
-          context:
-          - api-nuget-token-context
-          - "Serverless Framework"
-          requires:
-            - assume-role-pre-production        
-          filters:
-            branches:
-              only: release
-
-  teardown-pre-production:
-    when:
-      equal: ["eat/ssi-1369-teardown-pre-production", << pipeline.git.branch >>]
-    jobs:
-      - assume-role-pre-production:
-          context: api-assume-role-housing-pre-production-context
-          filters:
-            branches:
-              only: eat/ssi-1369-teardown-pre-production
-      - remove-serverless-pre-production:
-          context: "Serverless Framework"
-          requires:
-            - assume-role-pre-production
-          filters:
-            branches:
-              only: eat/ssi-1369-teardown-pre-production
-      - terraform-plan-destroy-pre-production:
-          requires:
-            - remove-serverless-pre-production
-          filters:
-            branches:
-              only: eat/ssi-1369-teardown-pre-production
-      - approve-terraform-destroy-pre-production:
-          type: approval
-          requires:
-            - terraform-plan-destroy-pre-production
-          filters:
-            branches:
-              only: eat/ssi-1369-teardown-pre-production
-      - terraform-destroy-pre-production:
-          requires:
-            - approve-terraform-destroy-pre-production
-          filters:
-            branches:
-              only: eat/ssi-1369-teardown-pre-production
